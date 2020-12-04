@@ -1,6 +1,7 @@
-use std::io::{ Result, Write, BufReader, BufRead };
+use std::io::{ Result, Write };
 use std::fs::OpenOptions;
 use structopt::StructOpt;
+use rand::Rng;
 
 #[derive(Debug, StructOpt)]
 struct Cmd {
@@ -11,31 +12,35 @@ struct Cmd {
     random: bool
 }
 
-fn main() -> Result<()> {
-    println!("Hello, world!");
+fn print_random(thoughts: &str) {
+    let mut vec = Vec::new();
+    for thought in thoughts.lines() {
+        vec.push(thought);
+    }
+    let mut rng = rand::thread_rng();
+    let n = rng.gen_range(0, vec.len());
 
+    println!("{}", vec[n]);
+}
+
+fn main() -> Result<()> {
     let args = Cmd::from_args();
 
+    // Load thoughts in memory (heap?)
+    let thoughts = std::fs::read_to_string("thoughts.txt")?;
+
+    // Add a new thought
     if let Some(i) = &args.thought {
         let mut file = OpenOptions::new()
             .append(true)
             .create(true)
             .open("thoughts.txt")?;
         writeln!(&mut file, "{}", i).unwrap();
-        // file.write_all(i.as_bytes())?;
-        // file.write_all("\r\n".as_bytes())?;
     }
+    // Print a random thought
     else if args.random {
-        let content = std::fs::read_to_string("thoughts.txt")?;
-        println!("{:?}", content);
-        // let input = OpenOptions::new().read(true).open("thoughts.txt")?;
-        // let buffered = BufReader::new(input);
-        // for line in buffered.lines() {
-        //     println!("{}", line?);
-        // }
+        print_random(&thoughts);
     }
-
-    println!("{:?}", args);
 
     Ok(())
 }
